@@ -1,4 +1,4 @@
-Manager of users and policies that are applicable to them.
+Back end for Manager of users and policies that are applicable to them.
 
 Applicabality of policies is checked everytime a policy is created or edited for all users, and for 1 specific user when that user is edited.
 
