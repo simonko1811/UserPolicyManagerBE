@@ -1,0 +1,22 @@
+[ {
+  "id" : "underaged",
+  "name" : "Underaged User",
+  "condition" : {
+    "rule" : "youngerThan",
+    "value" : "18"
+  }
+}, {
+  "id" : "internal-user",
+  "name" : "Internal User",
+  "condition" : {
+    "rule" : "emailDomainIs",
+    "value" : "evolveum.com"
+  }
+}, {
+  "id" : "developer-full-access",
+  "name" : "Developer (Full Access)",
+  "condition" : {
+    "rule" : "isMemberOf",
+    "value" : "Software Development"
+  }
+} ]
