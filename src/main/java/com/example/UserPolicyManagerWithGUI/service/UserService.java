@@ -7,12 +7,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 @Service
@@ -116,5 +118,36 @@ public class UserService {
     private String generateUserId(String firstName, String lastName) {
         if (firstName == null || firstName.isEmpty() || lastName == null) return "";
         return (firstName.charAt(0) + lastName).toLowerCase();
+    }
+
+    @PostConstruct
+    public void init() {
+        try {
+            // Kontrola adresára
+            File directory = file.getParentFile();
+            if (directory != null && !directory.exists()) {
+                if (directory.mkdirs()) {
+                    System.out.println("Directory 'data/' was created.");
+                }
+            }
+
+            // Kontrola súboru
+            if (!file.exists()) {
+                if (file.createNewFile()) {
+                    Files.write(file.toPath(), "[]".getBytes());
+                    System.out.println("File 'users.json' did not exists, so it was created with empty JSON.");
+                }
+            }
+
+            // Načítanie existujúcich dát (ak sú)
+            List<User> loaded = objectMapper.readValue(file, new TypeReference<>() {});
+            userStore.clear();
+            userStore.addAll(loaded);
+            System.out.println("Loaded " + loaded.size() + " usres.");
+
+        } catch (IOException e) {
+            System.err.println("CError working with file users.json: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.example.UserPolicyManagerWithGUI.service;
 import com.example.UserPolicyManagerWithGUI.model.Policy;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,7 @@ public class PolicyService {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private final File file = new File("data/policies.json");
+
 
     @EventListener(ContextRefreshedEvent.class)
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -73,5 +76,36 @@ public class PolicyService {
     public void deletePolicy(String id) {
         policyStore.removeIf(p -> p.getId().equals(id));
         savePolicies();
+    }
+
+    @PostConstruct
+    public void init() {
+        try {
+            // Kontrola adresára
+            File directory = file.getParentFile();
+            if (directory != null && !directory.exists()) {
+                if (directory.mkdirs()) {
+                    System.out.println("Directory 'data/' was created.");
+                }
+            }
+
+            // Kontrola súboru
+            if (!file.exists()) {
+                if (file.createNewFile()) {
+                    Files.write(file.toPath(), "[]".getBytes());
+                    System.out.println("File 'policies.json' did not exists, so it was created with empty JSON.");
+                }
+            }
+
+            // Načítanie existujúcich dát (ak sú)
+            List<Policy> loaded = objectMapper.readValue(file, new TypeReference<>() {});
+            policyStore.clear();
+            policyStore.addAll(loaded);
+            System.out.println("Loaded " + loaded.size() + " policies.");
+
+        } catch (IOException e) {
+            System.err.println("Error working with file policies.json: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
